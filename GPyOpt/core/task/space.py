@@ -6,7 +6,7 @@ import itertools
 
 class Design_space(object):
     """
-    Class to handle the input domain of the function. 
+    Class to handle the input domain of the function.
     The format of a input domain, possibly with restrictions:
     The domain is defined as a list of dictionaries contains a list of attributes, e.g.:
 
@@ -26,12 +26,12 @@ class Design_space(object):
              {'name': 'var_3', 'type': 'discrete', 'domain': (-10,10)}]
 
 
-    - Mixed domain 
+    - Mixed domain
     space =[{'name': 'var_1', 'type': 'continuous', 'domain':(-1,1), 'dimensionality' :1},
             {'name': 'var_4', 'type': 'continuous', 'domain':(-3,1), 'dimensionality' :2},
             {'name': 'var_3', 'type': 'discrete', 'domain': (0,1,2,3)}]
 
-    Restrictions can be added to the problem. Each restriction is of the form c(x) <= 0 where c(x) is a function of 
+    Restrictions can be added to the problem. Each restriction is of the form c(x) <= 0 where c(x) is a function of
     the input variables previously defined in the space. Restrictions should be written as a list
     of dictionaries. For instance, this is an example of an space coupled with a constrain
 
@@ -44,9 +44,9 @@ class Design_space(object):
     param constraints: list of dictionaries as indicated above (default, none)
 
     """
-    
+
     supported_types = ['continuous', 'discrete', 'bandit']
-    
+
     def __init__(self, space, constraints=None):
         self._complete_attributes(space)
         self.space_expanded = self._expand_attributes(self.space)
@@ -65,11 +65,11 @@ class Design_space(object):
                 d['dimensionality'] = int(d['dimensionality'])
             d['domain'] = literal_eval(d['domain'])
         return Design_space(space, None if len(constraints)==0 else constraints)
-        
+
     def _complete_attributes(self, space):
         """
         Creates an internal dictionary where all the missing elements are completed.
-        """   
+        """
         from copy import deepcopy
         self.space = []
         self.dimensionality = 0
@@ -123,7 +123,7 @@ class Design_space(object):
                 dd = d.copy()
                 dd['dimensionality'] = 1
                 dd['name'] = dd['name']+'_'+str(i+1)
-                d_new += [dd] 
+                d_new += [dd]
             space_expanded += d_new
         return space_expanded
 
@@ -136,7 +136,7 @@ class Design_space(object):
             if d['type']=='continuous':
                 bounds.extend([d['domain']]*d['dimensionality'])
         return bounds
-    
+
     def get_bounds(self):
         """
         Extracts the bounds of all the inputs of the domain.
@@ -145,7 +145,7 @@ class Design_space(object):
         if self.has_types['bandit']:
             bandit = self.get_bandit()
             mins, maxs = bandit.min(axis=0).tolist(), bandit.max(axis=0).tolist()
-            for i in range(len(bandit.min(axis=0).tolist())): bounds += [(mins[i],maxs[i])] 
+            for i in range(len(bandit.min(axis=0).tolist())): bounds += [(mins[i],maxs[i])]
         else:
             for d in self.space:
                 if d['type']=='continuous':
@@ -171,7 +171,7 @@ class Design_space(object):
 
     def get_discrete_grid(self):
         """
-        Computes a Numpy array with the grid of points that results after crossing the possible outputs of the discrete 
+        Computes a Numpy array with the grid of points that results after crossing the possible outputs of the discrete
         variables
         """
         sets_grid = []
@@ -212,8 +212,9 @@ class Design_space(object):
 
     def indicator_constraints(self,x):
         """
-        Return zero if x is within the constrains and zero otherwise.
+        Return One if x is within the constrains and 0 otherwise.
         """
+
         x = np.atleast_2d(x)
         I_x = np.ones((x.shape[0],1))
         if self.constraints != None:
@@ -247,9 +248,9 @@ def bounds_to_space(bounds):
         space += [{'name': 'var_'+str(k+1), 'type': 'continuous', 'domain':bounds[k], 'dimensionality':1}]
     return space
 
-    
 
 
 
 
-    
+
+
