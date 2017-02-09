@@ -205,7 +205,15 @@ class BanditAcqOptimizer(AcquOptimizer):
     def __init__(self, space, current_X, **kwargs):
         super(BanditAcqOptimizer, self).__init__(space)
         self.space = space
-        self.pulled_arms = current_X
+        self._pulled_arms = current_X
+        if self.space.has_types['discrete']:
+            arms = self.space.get_discrete_grid()
+        else:
+            arms = self.space.get_bandit()
+
+        indicators = self.space.indicator_constraints(arms)
+        invalid_arms = np.array([arms[idx] for idx, i in enumerate(indicators) if np.isclose(i, 0.0, atol=1e-14)])
+        self.update_pulled_arms(invalid_arms)
 
     def optimize(self, f=None, df=None, f_df=None):
         """
@@ -222,20 +230,14 @@ class BanditAcqOptimizer(AcquOptimizer):
         else:
             arms = self.space.get_bandit()
 
-        if arms.shape[0] > self.pulled_arms.shape[0]:
+        if arms.shape[0] > self._pulled_arms.shape[0]:
             # --- remove select best arm not yet sampled
             pref_f = f(arms).flatten()
             index = np.argsort(pref_f)
 
             k = 0
-            while k < arms.shape[0] and (any((self.pulled_arms[:]==arms[index[k],:].flatten()).all(1)) or np.isclose(pref_f[index[k]], 0.0, atol=1e-14)):
+            while any((self._pulled_arms[:]==arms[index[k],:].flatten()).all(1)):
                 k += 1
-
-            if k == arms.shape[0]:
-                print self.pulled_arms.shape[0]
-                print 'All locations of the design space have been sampled.'
-                return None
-
 
             x_min = arms[index[k],:]
             f_min = f(x_min)
@@ -246,6 +248,11 @@ class BanditAcqOptimizer(AcquOptimizer):
             return None
 
         return np.atleast_2d(x_min), f_min
+
+    def update_pulled_arms(self, update):
+        unique_update = np.array([a for a in update if not any((self._pulled_arms[:] == a).all(1))])
+        if len(unique_update) is not 0:
+            self._pulled_arms = np.vstack((self._pulled_arms, unique_update))
 
 
 class MixedAcqOptimizer(AcquOptimizer):

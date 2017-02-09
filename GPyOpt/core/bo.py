@@ -207,7 +207,7 @@ class BO(object):
         '''
         if self.modular_optimization == False:
             if isinstance(self.acquisition_optimizer,GPyOpt.optimization.BanditAcqOptimizer):
-                self.acquisition_optimizer.pulled_arms = self.X
+                self.acquisition_optimizer.update_pulled_arms(self.X)
 
     def _save_model_parameter_values(self):
         if self.model_parameters_iterations == None:
